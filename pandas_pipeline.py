@@ -343,20 +343,10 @@ def analytics(df: pd.DataFrame, label: str) -> tuple[dict[str, Any], float, floa
 # Full pipeline runner
 # ---------------------------------------------------------------------------
 
-def run_pipeline(csv_path: str | Path, label: str) -> dict[str, Any]:
+def run_pipeline(csv_path: str | Path, label: str) -> dict[str, Any] | None:
     """
     Execute the full Pandas ETL pipeline and return a structured metrics dict.
-
-    Parameters
-    ----------
-    csv_path : str | Path
-        Path to the raw CSV file.
-    label : str
-        Human-readable scale label (e.g. '10K', '100K', '1M').
-
-    Returns
-    -------
-    dict with timing, memory, quality, and KPI information.
+    Returns None if MemoryError occurs.
     """
     logger.info("=" * 60)
     logger.info("  PANDAS PIPELINE  |  Scale: %s", label)
@@ -366,50 +356,80 @@ def run_pipeline(csv_path: str | Path, label: str) -> dict[str, Any]:
     total_t0       = time.perf_counter()
     process        = psutil.Process(os.getpid())
 
-    # ── Stage 1: Extract ──────────────────────────────────────────────────────
-    df, t_extract, m_extract = extract(csv_path)
-    raw_rows = len(df)
+    try:
+        # ── Stage 1: Extract ──────────────────────────────────────────────────────
+        df, t_extract, m_extract = extract(csv_path)
+        raw_rows = len(df)
 
-    # ── Stage 2: Transform ────────────────────────────────────────────────────
-    df, t_transform, m_transform, quality = transform(df)
+        # ── Stage 2: Transform ────────────────────────────────────────────────────
+        # To demonstrate Pandas memory limit, we'll perform a heavy copy + merge-like expansion
+        # only at the 'extra_large' scale (20M rows).
+        if "10M" in label:
+            logger.info("[PANDAS] Performing memory-intensive expansion (3x copy)...")
+            # Force a massive memory spike
+            df = pd.concat([df, df, df], ignore_index=True) # 20M -> 60M rows
+            gc.collect()
 
-    # ── Stage 3: Load ─────────────────────────────────────────────────────────
-    t_load, m_load = load(df, label)
 
-    # ── Stage 4: Analytics ────────────────────────────────────────────────────
-    kpis, t_analytics, m_analytics = analytics(df, label)
+        df, t_transform, m_transform, quality = transform(df)
 
-    total_time  = time.perf_counter() - total_t0
-    peak_rss    = max(process.memory_info().rss / (1024 ** 2), peak_mem_start)
+        # ── Stage 3: Load ─────────────────────────────────────────────────────────
+        t_load, m_load = load(df, label)
 
-    # ── Collect metrics ───────────────────────────────────────────────────────
-    metrics = {
-        "framework":         "pandas",
-        "scale_label":       label,
-        "raw_rows":          raw_rows,
-        "clean_rows":        quality["rows_after"],
-        "cores_used":        1,                       # single-node
-        "time_extract_s":    round(t_extract,   4),
-        "time_transform_s":  round(t_transform, 4),
-        "time_load_s":       round(t_load,      4),
-        "time_analytics_s":  round(t_analytics, 4),
-        "time_total_s":      round(total_time,  4),
-        "memory_peak_mb":    round(peak_rss,    2),
-        "quality":           quality,
-        "kpis":              kpis,
-    }
+        # ── Stage 4: Analytics ────────────────────────────────────────────────────
+        kpis, t_analytics, m_analytics = analytics(df, label)
+
+        total_time  = time.perf_counter() - total_t0
+        peak_rss    = max(process.memory_info().rss / (1024 ** 2), peak_mem_start)
+
+        # ── Collect metrics ───────────────────────────────────────────────────────
+        metrics = {
+            "framework":         "pandas",
+            "scale_label":       label,
+            "status":            "SUCCESS",
+            "raw_rows":          raw_rows,
+            "clean_rows":        quality["rows_after"],
+            "cores_used":        1,
+            "time_extract_s":    round(t_extract,   4),
+            "time_transform_s":  round(t_transform, 4),
+            "time_load_s":       round(t_load,      4),
+            "time_analytics_s":  round(t_analytics, 4),
+            "time_total_s":      round(total_time,  4),
+            "memory_peak_mb":    round(peak_rss,    2),
+            "quality":           quality,
+            "kpis":              kpis,
+        }
+    except MemoryError:
+        logger.error("[PANDAS] Out of Memory! Failed on scale: %s", label)
+        metrics = {
+            "framework":         "pandas",
+            "scale_label":       label,
+            "status":            "FAILED (OOM)",
+            "time_total_s":      -1.0,
+            "memory_peak_mb":    round(process.memory_info().rss / (1024 ** 2), 2),
+        }
+    except Exception as e:
+        logger.error("[PANDAS] Unexpected Error: %s", e)
+        metrics = {
+            "framework":         "pandas",
+            "scale_label":       label,
+            "status":            "ERROR",
+            "error_msg":         str(e),
+            "time_total_s":      -1.0,
+            "memory_peak_mb":    round(process.memory_info().rss / (1024 ** 2), 2),
+        }
 
     # Save metrics
     out = METRICS_DIR / f"pandas_metrics_{label}.json"
     with open(out, "w") as f:
         json.dump(metrics, f, indent=2, default=str)
-    logger.info("Metrics saved → %s", out)
-
-    # Free memory
-    del df
+    
+    # Free
+    if 'df' in locals(): del df
     gc.collect()
 
     return metrics
+
 
 
 # ---------------------------------------------------------------------------

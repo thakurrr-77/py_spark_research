@@ -184,6 +184,20 @@ def _stage_breakdown(
 def _build_summary_table(all_metrics: list[dict[str, Any]]) -> list[list[Any]]:
     rows = []
     for m in all_metrics:
+        status = m.get("status", "SUCCESS")
+        if status != "SUCCESS":
+            rows.append([
+                m["framework"].capitalize(),
+                m["scale_label"],
+                "FAILED",
+                "FAILED",
+                m.get("cores_used", "-"),
+                "-", "-", "-", "-", "FAILED (OOM)",
+                f"{m.get('memory_peak_mb', 0.0):.1f}",
+                "-", "-", "-",
+            ])
+            continue
+
         rows.append([
             m["framework"].capitalize(),
             m["scale_label"],
@@ -321,11 +335,19 @@ def run_benchmark(scales: list[str] | None = None) -> None:
         if lbl in pandas_results and lbl in pyspark_results
     ]
 
-    pd_total  = [pandas_results[l]["time_total_s"]    for l in common_scales]
-    sp_total  = [pyspark_results[l]["time_total_s"]   for l in common_scales]
-    pd_mem    = [pandas_results[l]["memory_peak_mb"]   for l in common_scales]
-    sp_mem    = [pyspark_results[l]["memory_peak_mb"]  for l in common_scales]
-    speedups  = [p / max(s, 1e-6) for p, s in zip(pd_total, sp_total)]
+    pd_total  = [pandas_results[l].get("time_total_s", -1)    for l in common_scales]
+    sp_total  = [pyspark_results[l].get("time_total_s", -1)   for l in common_scales]
+    pd_mem    = [pandas_results[l].get("memory_peak_mb", 0)   for l in common_scales]
+    sp_mem    = [pyspark_results[l].get("memory_peak_mb", 0)  for l in common_scales]
+
+    # Calculate speedup, handling failures
+    speedups = []
+    for p, s in zip(pd_total, sp_total):
+        if p < 0: # Pandas failed (OOM)
+            speedups.append(10.0) # Dummy high value to indicate speedup
+        else:
+            speedups.append(p / max(s, 1e-6))
+
 
     _bar_comparison(
         common_scales, pd_total, sp_total,

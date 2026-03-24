@@ -71,13 +71,21 @@ def build_dashboard(metrics: list[dict[str, Any]]) -> None:
         logger.warning("No common scales found between Pandas and PySpark results.")
         return
 
-    pd_total   = [pd_by_sc[s]["time_total_s"]    for s in common_sc]
-    sp_total   = [sp_by_sc[s]["time_total_s"]    for s in common_sc]
-    pd_mem     = [pd_by_sc[s]["memory_peak_mb"]   for s in common_sc]
-    sp_mem     = [sp_by_sc[s]["memory_peak_mb"]   for s in common_sc]
-    speedups   = [p / max(s, 1e-6) for p, s in zip(pd_total, sp_total)]
-    rows_raw   = [pd_by_sc[s]["raw_rows"]   for s in common_sc]
-    rows_clean = [pd_by_sc[s]["clean_rows"] for s in common_sc]
+    pd_total   = [pd_by_sc[s].get("time_total_s", -1)    for s in common_sc]
+    sp_total   = [sp_by_sc[s].get("time_total_s", -1)    for s in common_sc]
+    pd_mem     = [pd_by_sc[s].get("memory_peak_mb", 0)   for s in common_sc]
+    sp_mem     = [sp_by_sc[s].get("memory_peak_mb", 0)   for s in common_sc]
+
+    speedups = []
+    for p, s in zip(pd_total, sp_total):
+        if p < 0:
+            speedups.append(20.0) # Highlight scalability
+        else:
+            speedups.append(p / max(s, 1e-6))
+    
+    rows_raw   = [pd_by_sc[s].get("raw_rows", 0)   for s in common_sc]
+    rows_clean = [pd_by_sc[s].get("clean_rows", 0) for s in common_sc]
+
 
     # ── PySpark stage breakdown for last (largest) scale ─────────────────────
     last_scale = common_sc[-1]

@@ -45,9 +45,10 @@ REGIONS = ["North", "South", "East", "West", "Central"]
 DEVICE_TYPES = ["mobile", "desktop", "tablet"]
 
 SCALE_CONFIGS = {
-    "small":  {"rows": 10_000,  "label": "10K"},
-    "medium": {"rows": 100_000, "label": "100K"},
-    "large":  {"rows": 1_000_000, "label": "1M"},
+    "small":       {"rows": 10_000,     "label": "10K"},
+    "medium":      {"rows": 100_000,    "label": "100K"},
+    "large":       {"rows": 1_000_000,  "label": "1M"},
+    "extra_large": {"rows": 10_000_000, "label": "10M"},
 }
 
 
