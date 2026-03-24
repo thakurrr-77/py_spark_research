@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Benchmark Report — Pandas vs PySpark</title>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --accent: #4C72B0;
+      --accent2: #DD8452; --text: #e8eaf6; --muted: #8892b0;
+      --border: #2a2d3a; --radius: 12px; --green: #2ecc71;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6; padding: 2rem; }
+    h1   { font-size: 2rem; margin-bottom:.3rem; background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .subtitle { color: var(--muted); margin-bottom: 2rem; }
+    .card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem;
+             border: 1px solid var(--border); margin-bottom: 1.5rem; }
+    .card h2 { margin-bottom: 1rem; font-size: 1.2rem; color: var(--accent); }
+    table { width:100%; border-collapse:collapse; font-size:.85rem; }
+    th { background: var(--border); padding:.6rem .8rem; text-align:left; color:var(--muted);
+          font-weight:600; white-space:nowrap; }
+    tr:nth-child(even) { background: rgba(255,255,255,.03); }
+    td { padding:.5rem .8rem; border-bottom:1px solid var(--border); }
+    td:nth-child(1) { font-weight:700; }
+    img { max-width:100%; border-radius: var(--radius); margin-top:.5rem; }
+    .tag { display:inline-block; padding:.25rem .65rem; border-radius:99px;
+            font-size:.75rem; font-weight:700; margin:.15rem; }
+    .tag.pandas  { background: #4C72B030; color: #4C72B0; border:1px solid #4C72B0; }
+    .tag.pyspark { background: #DD845230; color: #DD8452; border:1px solid #DD8452; }
+    footer { color:var(--muted); font-size:.8rem; margin-top:2rem; text-align:center; }
+  </style>
+</head>
+<body>
+  <h1>Big Data Benchmark Report</h1>
+  <p class="subtitle">
+    Implementation and Study of Scalable Big Data Processing and Analytics<br/>
+    <strong>Aayush Ranjan (2210991137) &amp; Shubham Thakur (2210992370)</strong> —
+    Chitkara Institute of Engineering and Technology
+  </p>
+
+  <div class="card">
+    <h2>📊 Benchmark Dashboard</h2>
+    <img src="benchmark_dashboard.png" alt="Benchmark Dashboard"/>
+  </div>
+
+  <div class="card">
+    <h2>📋 Detailed Results Table</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Framework</th><th>Scale</th><th>Raw Rows</th><th>Clean Rows</th><th>Cores</th>
+          <th>Extract (s)</th><th>Transform (s)</th><th>Load (s)</th><th>Analytics (s)</th>
+          <th>Total (s)</th><th>Mem (MB)</th><th>Null Before</th><th>Null After</th><th>Drop %</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>Pandas</td><td>10K</td><td>10,000</td><td>10,000</td><td>1</td><td>0.044</td><td>0.054</td><td>0.111</td><td>0.043</td><td><strong>0.254</strong></td><td>198.7</td><td>0.16%</td><td>0.00%</td><td>0.00%</td></tr>
+<tr><td>Pandas</td><td>100K</td><td>100,000</td><td>100,000</td><td>1</td><td>0.293</td><td>0.119</td><td>0.128</td><td>0.053</td><td><strong>0.595</strong></td><td>172.7</td><td>0.14%</td><td>0.00%</td><td>0.00%</td></tr>
+<tr><td>Pandas</td><td>1M</td><td>1,000,000</td><td>1,000,000</td><td>1</td><td>3.559</td><td>1.337</td><td>0.783</td><td>0.242</td><td><strong>5.928</strong></td><td>282.8</td><td>0.14%</td><td>0.00%</td><td>0.00%</td></tr>
+<tr><td>Pyspark</td><td>100K</td><td>100,000</td><td>100,000</td><td>12</td><td>0.221</td><td>4.165</td><td>1.096</td><td>4.201</td><td><strong>9.828</strong></td><td>189.9</td><td>0.00%</td><td>0.00%</td><td>0.00%</td></tr>
+<tr><td>Pyspark</td><td>10K</td><td>10,000</td><td>10,000</td><td>12</td><td>3.504</td><td>7.301</td><td>1.746</td><td>6.842</td><td><strong>19.681</strong></td><td>189.9</td><td>0.00%</td><td>0.00%</td><td>0.00%</td></tr>
+<tr><td>Pyspark</td><td>1M</td><td>1,000,000</td><td>1,000,000</td><td>12</td><td>0.248</td><td>13.889</td><td>2.625</td><td>5.321</td><td><strong>22.323</strong></td><td>187.1</td><td>0.00%</td><td>0.00%</td><td>0.00%</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>⚡ Speed-up Analysis</h2>
+    <img src="speedup_factor.png" alt="Speed-up Factor"/>
+    <img src="total_time_comparison.png" alt="Total Time Comparison"/>
+  </div>
+
+  <div class="card">
+    <h2>💾 Memory Usage</h2>
+    <img src="memory_comparison.png" alt="Memory Comparison"/>
+  </div>
+
+  <footer>
+    Generated automatically by benchmark.py &mdash;
+    <span class="tag pandas">Pandas</span>
+    <span class="tag pyspark">PySpark</span>
+  </footer>
+</body>
+</html>

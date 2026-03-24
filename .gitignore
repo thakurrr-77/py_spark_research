@@ -31,9 +31,6 @@ ENV/
 data/*.csv
 output/
 metrics/*.json
-reports/*.png
-reports/*.html
-reports/*.md
 
 # Spark / Hadoop
 spark-warehouse/
