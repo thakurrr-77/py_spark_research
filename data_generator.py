@@ -46,8 +46,8 @@ DEVICE_TYPES = ["mobile", "desktop", "tablet"]
 
 SCALE_CONFIGS = {
     "small":       {"rows": 10_000,     "label": "10K"},
-    "medium":      {"rows": 100_000,    "label": "100K"},
-    "large":       {"rows": 1_000_000,  "label": "1M"},
+    "medium":      {"rows": 1_000_000,  "label": "1M"},
+    "large":       {"rows": 5_000_000,  "label": "5M"},
     "extra_large": {"rows": 10_000_000, "label": "10M"},
 }
 

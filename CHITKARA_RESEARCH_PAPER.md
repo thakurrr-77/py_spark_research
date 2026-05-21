@@ -73,11 +73,17 @@ The following data was collected over multiple execution iterations on the Zeta 
 ### 5.1 Total Execution Time Analysis
 | Dataset Scale (Rows) | Pandas Total (s) | PySpark Total (s) | Observed Pattern |
 | :--- | :--- | :--- | :--- |
-| **10,000 (Small)** | 0.197 | 15.049 | High Spark Startup Overhead |
-| **100,000 (Medium)** | 0.480 | 9.724 | Coordination costs dominate Spark |
-| **1,000,000 (Large)** | 4.802 | 19.285 | Gap closing (4x difference) |
-| **5,000,000 (X-Large)** | 39.779 | 65.145 | Converging (1.6x difference) |
-| **10,000,000 (Huge)** | **102.001** | **124.396** | **Near Crossover (1.2x difference)** |
+| **10,000 (Small)** | 0.681 | 17.701 | High Spark Startup Overhead |
+| **1,000,000 (Large)** | 5.133 | 31.193 | Coordination costs (6x difference) |
+| **5,000,000 (X-Large)** | 29.957 | 69.630 | Converging (2.3x difference) |
+| **10,000,000 (Huge)** | 102.001 | 124.396 | Near Crossover (1.2x difference) |
+
+#### 5.1.1 Small Scale Trend Analysis (10K - 5M Rows)
+Our analysis identifies a "Spark Tax" for smaller workloads:
+- **At 10,000 rows**: PySpark is **26x slower** than Pandas due to JVM overhead.
+- **At 1,000,000 rows**: The gap narrows significantly.
+- **Scaling Trend**: While Pandas execution time grows linearly (from 0.6s to 30s), PySpark shows resilience with memory management, preparing for the efficiency crossover at higher volumes.
+
 
 ### 5.2 Visualization Dashboard Analysis
 #### A. Execution Speed Dashboard
